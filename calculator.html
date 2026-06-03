@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLever Inferno Incentive/Stimulus Calculator</title>
+    <!-- Import professional sleek fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"Plus Jakarta Sans"', 'sans-serif'], // Replaces all monospace numbers with the modern sans font
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #cbd5e1; } /* slate-950 and slate-300 */
+        
+        /* Ensure all numerical data lines up cleanly without needing a slashed-zero typewriter font */
+        .font-mono { 
+            font-variant-numeric: tabular-nums; 
+            letter-spacing: -0.02em;
+        }
+        
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+        .input-group input[type="number"], .input-group input[type="text"] { 
+            width: 100%; padding: 0.5rem 0.75rem; 
+            border: 1px solid #334155; border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            background-color: #0f172a; color: #f8fafc;
+            transition: all 0.2s;
+        }
+        .input-group input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 1px #f97316; background-color: #020617; }
+        
+        /* Refined Data Tables */
+        .table-header { @apply bg-slate-900/80 text-slate-400 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-700/60; }
+        .table-row { @apply transition-colors; }
+        .table-row:nth-child(even) { @apply bg-slate-800/20; }
+        .table-row:hover { @apply bg-slate-800/50; }
+        .table-cell { @apply py-3.5 px-4 border-b border-slate-700/60 text-sm; }
+        .table-row:last-child .table-cell { border-bottom: none; }
+        .table-row-group-bottom .table-cell { border-bottom: 2px solid #334155; } /* Used to cluster lines */
+        
+        /* Layout resets */
+        aside::-webkit-scrollbar { width: 4px; }
+        aside::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+        main::-webkit-scrollbar { width: 6px; }
+        main::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 4px; }
+        
+        /* Custom Accents */
+        .b12-text { color: #fb923c; font-weight: 600; } /* orange-400 */
+        .b22-text { color: #22d3ee; font-weight: 600; } /* cyan-400 */
+        .b8-text, .b20-text { color: #93c5fd; font-weight: 600; } /* blue-300 */
+        
+        /* Collapsible sidebar logic */
+        #sidebar { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #sidebar.collapsed { margin-left: -340px; }
+        #sidebar-toggle {
+            position: absolute; right: -32px; top: 20px; 
+            width: 32px; height: 48px;
+            background-color: #0f172a; 
+            border: 1px solid #1e293b; border-left: none;
+            border-radius: 0 8px 8px 0;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #94a3b8;
+            transition: color 0.2s, background-color 0.2s;
+            z-index: 50; box-shadow: 4px 0 6px -1px rgba(0,0,0,0.3);
+        }
+        #sidebar-toggle:hover { color: #f8fafc; background-color: #1e293b; }
+        #sidebar-toggle svg { transition: transform 0.3s; }
+        #sidebar.collapsed #sidebar-toggle svg { transform: rotate(180deg); }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+    
+    <!-- HEADER -->
+    <header class="bg-slate-900 px-6 py-4 shadow-md border-b border-slate-800 z-20 shrink-0 text-center">
+        <h1 class="text-3xl font-bold text-white tracking-tight">Inferno for <span class="b20-text">cvxCRV</span> Incentive/Stimulus Calculator</h1>
+        <p class="text-slate-400 text-sm mt-1.5 font-medium">Interactive model of the <span class="b12-text drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]">fireUSD</span>/<span class="b22-text drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">BcvxCRV</span> ecosystem</p>
+    </header>
+    
+    <!-- MAIN LAYOUT -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- SYSTEM VARIABLES SIDEBAR -->
+        <aside id="sidebar" class="w-full md:w-[340px] bg-slate-900 border-r border-slate-800 shadow-2xl shrink-0 relative z-10 flex flex-col">
+            <button id="sidebar-toggle" title="Toggle System Variables">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            
+            <div class="flex-1 overflow-y-auto p-6">
+                <h2 class="text-xs uppercase tracking-widest font-bold text-slate-500 mb-6 pb-3 border-b border-slate-800 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    System Variables
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="input-group">
+                        <label>Deposit Asset</label>
+                        <input type="text" id="b8" value="reUSD" class="font-mono">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            <span id="reusd_price_label">reUSD Price ($)</span>
+                            <span class="text-[10px] text-slate-500 font-normal lowercase tracking-widest ml-1" id="reusd_price_api">(Current Price: $1.00)</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-bold">$</span>
+                            <input type="number" id="b9" value="1.00" step="0.01" class="font-mono">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>sreUSD Collateral TVL ($)</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-bold">$</span>
+                            <input type="number" id="b10" value="5000000" step="10000" class="font-mono">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-6 border-slate-800">
+                    
+                    <div class="input-group">
+                        <label>fireToken Name</label>
+                        <input type="text" id="b12" value="fireUSD" class="font-mono">
+                    </div>
+                    <div class="input-group">
+                        <label>% <span class="b12-text">fireUSD</span>/asset (CR)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b13" value="50" step="1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group relative" id="tooltip-container-1">
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <span class="cursor-help border-b border-dashed border-slate-500"><span class="b12-text">fireUSD</span> discount (%)</span>
+                            <span class="text-slate-500 hover:text-slate-300 transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                        </label>
+                        <!-- Custom Tooltip -->
+                        <div class="absolute z-50 invisible opacity-0 transition-opacity duration-200 bg-slate-800 text-white text-xs rounded p-2 shadow-lg -top-10 left-0 w-48 pointer-events-none" id="custom-tooltip-1">
+                            Value of token discounted relative to reUSD
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b14" value="15" step="0.1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>% <span class="b12-text">fireUSD</span> in furnace</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b16" value="40" step="1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-6 border-slate-800">
+
+                    <div class="input-group">
+                        <label>Collateral Yield (%)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b18" value="3" step="0.1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Treasury Fee (%)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b19" value="10" step="1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Burn Asset</label>
+                        <input type="text" id="b20" value="cvxCRV" class="font-mono">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Burn Asset Price ($)
+                            <span class="text-[10px] text-slate-500 font-normal lowercase tracking-widest ml-1" id="burn_asset_price_api">(Current Price: $0.16)</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-bold">$</span>
+                            <input type="number" id="b21" value="0.16" step="0.01" class="font-mono">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-6 border-slate-800">
+
+                    <div class="input-group relative" id="tooltip-container-2">
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <span class="cursor-help border-b border-dashed border-slate-500">Burn Token (<span class="b22-text">BcvxCRV</span>) Discount (%)</span>
+                            <span class="text-slate-500 hover:text-slate-300 transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                        </label>
+                        <!-- Custom Tooltip -->
+                        <div class="absolute z-50 invisible opacity-0 transition-opacity duration-200 bg-slate-800 text-white text-xs rounded p-2 shadow-lg -top-10 left-0 w-48 pointer-events-none" id="custom-tooltip-2">
+                            Value of token discounted relative to cvxCRV
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="b23" value="20" step="1" class="font-mono text-right">
+                            <span class="text-slate-500 font-bold">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label># of Epochs in a year</label>
+                        <input type="number" id="b25" value="26" step="1" class="font-mono">
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-slate-950 border border-orange-500/30 rounded-xl shadow-inner relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                        <div class="input-group mb-0">
+                            <label class="text-orange-400 border-b border-slate-800 pb-2 mb-3">
+                                Daily <span class="b22-text">BcvxCRV</span> Burn Rate (%)
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="w14" value="0.274" step="0.001" class="font-mono text-orange-300 text-right bg-slate-900 border-orange-500/50 focus:border-orange-500">
+                                <span class="text-orange-500/70 font-bold">%</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2 uppercase tracking-wide">* Set by protocol governance</p>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center border-t border-slate-800 pt-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Annually:</span>
+                            <span id="out_w15" class="font-mono font-bold text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.3)]">0.00%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN SCROLLABLE DASHBOARD -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 lg:p-14 space-y-12 relative z-0 flex flex-col items-center">
+            
+            <div class="w-full max-w-5xl space-y-12">
+            
+                <!-- INTRO BLURB -->
+                <div class="max-w-3xl mx-auto w-full px-6 py-4 space-y-4 text-left">
+                    <p class="text-slate-300 text-[15px] leading-relaxed">
+                        <span class="font-semibold text-white">Inferno</span> is a hypothetical friendly fork protocol of AladdinDAO's <a href="https://clever.aladdin.club/clever/" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline">CLever</a>. The protocol offers a twist on CLever by incentivizing the debt token (<span class="b12-text">fireUSD</span>) out of the Furnace and allowing another token (<span class="b22-text">BcvxCRV</span>) to take its place. This calculator lets users determine what conditions (TVL, burn token, peg discounts, incentives, etc.) would affect the ability to lure <span class="b12-text">fireUSD</span> out of the furnace and replace it with <span class="b22-text">BcvxCRV</span>.
+                    </p>
+                    <p class="text-center">
+                        <span class="font-semibold text-orange-400">Have fun burning stuff</span> and reach out if you'd like to help build Inferno!
+                    </p>
+                    <p class="text-slate-400 text-xs text-center">
+                        Please contact me with any questions or feedback.
+                        <span class="inline-flex items-center gap-3 mt-1.5 justify-center">
+                            <a href="https://t.me/kmet_s" class="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors" title="Telegram @kmet_s">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.688 7.954c-.126.595-.484.743-.981.464l-2.707-1.994-1.306 1.257c-.144.145-.265.265-.543.265l.19-2.756 5.016-4.532c.218-.194-.047-.302-.338-.108l-6.196 3.902-2.67-.836c-.58-.181-.592-.58.121-.858l10.43-4.02c.484-.181.907.108.752.858z"/></svg>
+                                <span>@kmet_s</span>
+                            </a>
+                            <a href="https://x.com/kmets_" class="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors" title="X @kmets_">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                <span>@kmets_</span>
+                            </a>
+                        </span>
+                    </p>
+                </div>
+            
+                <!-- GENERAL INFERNO WORKFLOW -->
+                <section class="max-w-3xl mx-auto w-full bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden">
+                    <div class="bg-slate-800/40 border-b border-slate-800 px-6 py-4 flex items-center justify-between cursor-pointer" onclick="document.getElementById('workflow-body').classList.toggle('hidden'); document.getElementById('workflow-chevron').classList.toggle('rotate-180');">
+                        <h2 class="text-lg font-bold text-white">General Inferno Workflow</h2>
+                        <svg id="workflow-chevron" class="w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <div id="workflow-body" class="">
+                        <div class="p-6 space-y-4">
+                            <!-- BEFORE STIMULUS DEADLINE -->
+                            <div class="bg-slate-950 rounded-xl border border-slate-800 p-5">
+                                <div class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-3 text-center">Before Stimulus Deadline</div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-center">
+                                        <div class="text-slate-500 font-mono text-xs mb-1">0.</div>
+                                        <div class="text-slate-300">Users deposit assets &amp; mint debt tokens creating starting state</div>
+                                    </div>
+                                    <div class="flex items-center justify-center text-slate-600 text-lg font-bold py-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                    </div>
+                                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-center">
+                                        <div class="text-slate-500 font-mono text-xs mb-1">1.</div>
+                                        <div class="text-slate-300">Users deposit burn tokens and protocols deposit stimulus</div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center mt-4">
+                                    <div class="bg-indigo-900/40 border border-indigo-500/30 rounded-full px-5 py-2 text-xs font-bold text-indigo-300 uppercase tracking-widest">
+                                        <svg class="w-3.5 h-3.5 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                        2. Stimulus Deadline
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- DIVIDER ARROW -->
+                            <div class="flex justify-center">
+                                <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                            </div>
+                            
+                            <!-- AFTER STIMULUS DEADLINE -->
+                            <div class="bg-slate-950 rounded-xl border border-slate-800 p-5">
+                                <div class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 text-center">After Stimulus Deadline</div>
+                                <div class="flex justify-center mb-4">
+                                    <div class="bg-indigo-900/40 border border-indigo-500/30 rounded-full px-5 py-2 text-xs font-bold text-indigo-300 uppercase tracking-widest">
+                                        2. Stimulus Deadline
+                                        <svg class="w-3.5 h-3.5 inline-block ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-center">
+                                        <div class="text-slate-500 font-mono text-xs mb-1">3.</div>
+                                        <div class="text-slate-300">Debt tokens leave furnace &amp; burn tokens enter furnace</div>
+                                    </div>
+                                    <div class="flex items-center justify-center text-slate-600 text-lg font-bold py-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                    </div>
+                                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-center">
+                                        <div class="text-slate-500 font-mono text-xs mb-1">4.</div>
+                                        <div class="text-slate-300">Final system state</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            
+                <!-- SECTION: STARTING SYSTEM STATE -->
+                <section class="max-w-4xl mx-auto w-full bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden">
+                    <div class="bg-slate-800/40 border-b border-slate-800 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-normal">0.</span> System State Before Deadline
+                            <span class="text-sm font-normal text-slate-400 italic">(no burn asset in furnace initially)</span>
+                        </h2>
+                    </div>
+                    
+                    <div class="overflow-x-auto pb-4">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="table-header p-4 pl-6">Metric</th>
+                                    <th class="table-header p-4 text-right border-l border-slate-800/50">Value ($ / %)</th>
+                                    <th class="table-header p-4 pr-6 text-right border-l border-slate-800/50">Tokens / Units</th>
+                                </tr>
+                            </thead>
+                            <tbody id="start_state_tbody">
+                                <!-- JS injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SECTION: BURN INCENTIVES -->
+                <section class="w-full bg-slate-900 rounded-2xl shadow-xl border border-indigo-500/20 overflow-hidden relative">
+                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-cyan-500"></div>
+                    <div class="bg-slate-800/40 border-b border-slate-800 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-normal">2.</span> Burn Token Incentives + Protocol Stimulus
+                        </h2>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center justify-center">
+                        <div class="flex gap-6 w-full md:w-auto">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"><span class="b22-text">BcvxCRV</span> Incentive %</label>
+                                <div class="relative w-40">
+                                    <input type="number" id="j23" value="0.5" step="0.1" class="w-full p-3 border border-slate-700 rounded-lg bg-slate-950/50 text-white text-right font-mono text-lg pr-8 focus:outline-none focus:border-cyan-500">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stimulus per epoch</label>
+                                <div class="relative w-48">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">$</span>
+                                    <input type="number" id="j22" value="5000" step="10" class="w-full p-3 pl-8 border border-slate-700 rounded-lg bg-slate-950/50 text-white text-right font-mono text-lg focus:outline-none focus:border-cyan-500">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950 px-8 py-5 rounded-xl shadow-inner border border-slate-800 flex flex-col justify-center text-center w-full md:w-auto">
+                            <span class="text-xs font-bold text-cyan-500 uppercase tracking-widest textShadow">Total Incentive + Stimulus</span>
+                            <span class="font-bold text-3xl font-mono text-white mt-3 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]" id="out_j26">$0.00</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: ACTOR STATES -->
+                <section class="w-full">
+                    <h2 class="text-xl font-bold text-white mb-6 pb-3 border-b border-slate-800 flex items-center gap-2">
+                        <span class="text-slate-500 font-mono font-normal">1 &amp; 3.</span> Actor States Before vs. After Deadline
+                        <span class="text-sm font-normal text-slate-400 italic ml-2">(Both Biff and Doc's total <span class="b12-text">fireUSD</span> must equal <span id="furnace_total_note" class="font-mono text-slate-300"></span>)</span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                        <!-- BIFF -->
+                        <div class="rounded-2xl shadow-xl bg-slate-900 border border-slate-800 border-t-2 border-t-rose-500 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)] hover:border-rose-500/30">
+                            <div class="p-6 bg-slate-800/30 border-b border-slate-800/50 text-center h-[112px] flex flex-col justify-center">
+                                <h3 class="font-bold text-xl text-rose-400">Biff <span class="text-sm text-slate-400 font-normal">(Bribe Seeker)</span></h3>
+                                <div class="text-[11px] text-rose-300/70 mt-2 uppercase tracking-widest"><span class="b12-text">fireUSD</span> holder seeking bribes</div>
+                            </div>
+                            <div class="p-6 space-y-6 flex-1 flex flex-col">
+                                
+                                <!-- Biff Input -->
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner h-[88px] flex flex-col justify-center">
+                                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Initial <span class="b12-text">fireUSD</span> In Furnace</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 font-bold">$</span>
+                                        <input type="number" id="k12" value="450000" class="w-full p-2.5 pl-8 border border-rose-900/50 bg-rose-950/20 text-rose-100 rounded-lg text-right font-mono font-bold focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500">
+                                    </div>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2 mb-3">Before Deadline</div>
+                                    <div class="space-y-2.5">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">In Furnace:</span> <span class="font-mono text-slate-200 bg-slate-800/50 px-2 py-0.5 rounded" id="biff_bf_furn"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">Furnace Share:</span> <span class="font-mono text-slate-200" id="biff_bf_share"></span></div>
+                                        <div class="flex justify-between items-center pt-2"><span class="text-sm font-semibold text-slate-300">Native APR:</span> <span class="font-mono font-bold text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-500/20" id="biff_bf_apr"></span></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 flex flex-col justify-end">
+                                    <div class="text-[10px] font-bold text-rose-400/80 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">After Deadline</div>
+                                    <div class="space-y-2.5 pb-3">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">In Furnace:</span> <span class="font-mono text-white bg-slate-700/50 px-2 py-0.5 rounded" id="biff_af_furn"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Furnace Share:</span> <span class="font-mono text-white" id="biff_af_share"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Stimulus Share:</span> <span class="font-mono text-white" id="biff_stim_share"></span></div>
+                                    </div>
+                                    <div class="flex justify-between items-center border-t border-slate-700 pt-3 mt-1"><span class="text-sm font-bold text-emerald-400">Total APR:</span> <span class="font-mono font-bold text-emerald-400 text-xl tracking-tight drop-shadow-[0_0_5px_rgba(52,211,153,0.4)]" id="biff_af_apr"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DOC -->
+                        <div class="rounded-2xl shadow-xl bg-slate-900 border border-slate-800 border-t-2 border-t-emerald-500 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-emerald-500/30">
+                            <div class="p-6 bg-slate-800/30 border-b border-slate-800/50 text-center h-[112px] flex flex-col justify-center">
+                                <h3 class="font-bold text-xl text-emerald-400">Doc <span class="text-sm text-slate-400 font-normal">(Loyal Holder)</span></h3>
+                                <div class="text-[11px] text-emerald-300/70 mt-2 uppercase tracking-widest"><span class="b12-text">fireUSD</span> holder preferring furnace</div>
+                            </div>
+                            <div class="p-6 space-y-6 flex-1 flex flex-col">
+                                
+                                <!-- Doc Calculation -->
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner flex flex-col justify-center h-[88px]">
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Initial <span class="b12-text">fireUSD</span> In Furnace</label>
+                                    <div class="text-right font-mono text-lg font-bold text-emerald-400 py-0.5 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]" id="out_l12">$400,000.00</div>
+                                    <div class="text-[10px] text-slate-500 font-mono text-right mt-1 italic">* Remainder of furnace</div>
+                                </div>
+
+                                <div class="flex-1">
+                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2 mb-3">Before Deadline</div>
+                                    <div class="space-y-2.5">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">In Furnace:</span> <span class="font-mono text-slate-200 bg-slate-800/50 px-2 py-0.5 rounded" id="doc_bf_furn"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">Furnace Share:</span> <span class="font-mono text-slate-200" id="doc_bf_share"></span></div>
+                                        <div class="flex justify-between items-center pt-2"><span class="text-sm font-semibold text-slate-300">Native APR:</span> <span class="font-mono font-bold text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-500/20" id="doc_bf_apr"></span></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 flex flex-col justify-end">
+                                    <div class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">After Deadline</div>
+                                    <div class="space-y-2.5 pb-3">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">In Furnace:</span> <span class="font-mono text-white bg-slate-700/50 px-2 py-0.5 rounded" id="doc_af_furn"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Furnace Share:</span> <span class="font-mono text-white" id="doc_af_share"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Stimulus Share:</span> <span class="font-mono text-white" id="doc_stim_share"></span></div>
+                                    </div>
+                                    <div class="flex justify-between items-center border-t border-slate-700 pt-3 mt-1"><span class="text-sm font-bold text-emerald-400">Total APR:</span> <span class="font-mono font-bold text-emerald-400 text-xl tracking-tight drop-shadow-[0_0_5px_rgba(52,211,153,0.4)]" id="doc_af_apr"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MARTY -->
+                        <div class="rounded-2xl shadow-xl bg-slate-900 border border-slate-800 border-t-2 border-t-cyan-500 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:border-cyan-500/30">
+                            <div class="p-6 bg-slate-800/30 border-b border-slate-800/50 text-center h-[112px] flex flex-col justify-center">
+                                <h3 class="font-bold text-xl text-cyan-400">Marty <span class="text-sm text-slate-400 font-normal">(<span class="b22-text">BcvxCRV</span>)</span></h3>
+                                <div class="text-[11px] text-cyan-300/70 mt-2 uppercase tracking-widest"><span class="b22-text">BcvxCRV</span> holder putting assets in Furnace</div>
+                            </div>
+                            <div class="p-6 space-y-6 flex-1 flex flex-col">
+                                
+                                <!-- Marty Input -->
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner h-[88px] flex flex-col justify-center">
+                                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Initial <span class="b22-text">BcvxCRV</span> Out of Furnace</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500 font-bold">$</span>
+                                        <input type="number" id="j10" value="100000" class="w-full p-2.5 pl-8 border border-cyan-900/50 bg-cyan-950/20 text-cyan-100 rounded-lg text-right font-mono font-bold focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                                    </div>
+                                </div>
+
+                                <div class="flex-1">
+                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2 mb-3">Before Deadline</div>
+                                    <div class="space-y-2.5">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">Out of Furnace:</span> <span class="font-mono text-slate-200 bg-slate-800/50 px-2 py-0.5 rounded" id="marty_bf_out"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-400 font-medium">Furnace Share:</span> <span class="font-mono text-slate-200" id="marty_bf_share"></span></div>
+                                        <div class="flex justify-between items-center pt-2"><span class="text-sm font-semibold text-slate-300">Native APR:</span> <span class="font-mono font-bold text-slate-500" id="marty_bf_apr"></span></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 flex flex-col justify-end">
+                                    <div class="text-[10px] font-bold text-cyan-400/80 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">After Deadline</div>
+                                    <div class="space-y-2.5 pb-3">
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">In Furnace:</span> <span class="font-mono text-white bg-slate-700/50 px-2 py-0.5 rounded" id="marty_af_furn"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Furnace Share:</span> <span class="font-mono text-white" id="marty_af_share"></span></div>
+                                        <div class="flex justify-between items-center"><span class="text-sm text-slate-300 font-medium">Stimulus Share:</span> <span class="font-mono text-slate-500" id="marty_stim_share"></span></div>
+                                    </div>
+                                    <div class="flex justify-between items-center border-t border-slate-700 pt-3 mt-1"><span class="text-sm font-bold text-emerald-400">Total APR:</span> <span class="font-mono font-bold text-emerald-400 text-xl tracking-tight drop-shadow-[0_0_5px_rgba(52,211,153,0.4)]" id="marty_af_apr"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: ENDING SYSTEM STATE -->
+                <section class="max-w-4xl mx-auto w-full bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden mb-12">
+                    <div class="bg-slate-800/40 border-b border-slate-800 px-6 py-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="text-slate-500 font-mono font-normal">4.</span> System State After Deadline
+                        </h2>
+                    </div>
+                    <div class="overflow-x-auto pb-4">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="table-header p-4 pl-6">Metric</th>
+                                    <th class="table-header p-4 text-right border-l border-slate-800/50">Value ($ / %)</th>
+                                    <th class="table-header p-4 pr-6 text-right border-l border-slate-800/50">Tokens / Units</th>
+                                </tr>
+                            </thead>
+                            <tbody id="end_state_tbody">
+                                <!-- JS injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            
+            </div>
+        </main>
+    </div>
+
+<script>
+    const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    const formatNumber = (val) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(val);
+    const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(val);
+
+    function updateTextFields(B8, B12, B20, B22) {
+        document.querySelectorAll('.b8-text').forEach(e => e.innerText = B8);
+        document.querySelectorAll('.b12-text').forEach(e => e.innerText = B12);
+        document.querySelectorAll('.b20-text').forEach(e => e.innerText = B20);
+        document.querySelectorAll('.b22-text').forEach(e => e.innerText = B22);
+
+        // Update the reUSD Price label to match whatever is entered in Deposit Asset
+        const reusdLabel = document.getElementById('reusd_price_label');
+        if (reusdLabel) reusdLabel.innerText = B8 + " Price ($)";
+
+        // Update tooltips dynamically based on inputs
+        const tooltip1 = document.getElementById('custom-tooltip-1');
+        if (tooltip1) tooltip1.innerText = "Value of token discounted relative to " + B8;
+        const tooltip2 = document.getElementById('custom-tooltip-2');
+        if (tooltip2) tooltip2.innerText = "Value of token discounted relative to " + B20;
+    }
+
+    function calculate() {
+        // [INPUTS]
+        const B8 = document.getElementById('b8').value;
+        const B9 = Number(document.getElementById('b9').value);
+        const B10 = Number(document.getElementById('b10').value);
+        const B12 = document.getElementById('b12').value;
+        const B13 = Number(document.getElementById('b13').value) / 100;
+        const B14 = Number(document.getElementById('b14').value) / 100;
+        const B16 = Number(document.getElementById('b16').value) / 100;
+        const B18 = Number(document.getElementById('b18').value) / 100;
+        const B19 = Number(document.getElementById('b19').value) / 100;
+        const B20 = document.getElementById('b20').value;
+        const B21 = Number(document.getElementById('b21').value);
+        const B23 = Number(document.getElementById('b23').value) / 100;
+        const B25 = Number(document.getElementById('b25').value);
+        const W14 = Number(document.getElementById('w14').value) / 100;
+        
+        const B22 = "B" + B20;
+        const B15 = B9 - (B9 * B14);
+        const B24 = B21 * (1 - B23);
+
+        updateTextFields(B8, B12, B20, B22);
+
+        // [0. STARTING SYSTEM STATE MATH]
+        const F9 = (B10 / B9) * B13;
+        const E9 = F9 * B15;
+        const F10 = F9 * B16;
+        const E10 = F10 * B15;
+        // The spreadsheet calculates entering rewards pre-treasury fee for this metric
+        const E11 = B10 * B18; 
+        const F11 = E11 / B9;
+        const E12 = E11 / B25;
+        const F12 = E12 / B9;
+        const E13 = E11 / 365;
+        const F13 = E13 / B9;
+        const E14 = F10 > 0 ? F13 / F10 : 0;
+        const E15 = E14 * 365;
+        const E16 = E14 > 0 ? 1 / E14 : 0;
+        const F16 = E16 / 365;
+        const F17 = F16 > 0 ? F10 * (1 / F16) : 0;
+        const E17 = F17 * B15;
+        const F18 = F10 - F17;
+        const E18 = F18 * B15;
+        const E19 = F17 * B9;
+        // Rebond APR
+        const E20 = E10 > 0 ? (((E19) + (E18)) / E10) - 1 : 0; 
+
+        const renderTable = (tbodyId, data) => {
+            let html = '';
+            data.forEach((row, i) => {
+                const isBottom = (tbodyId === 'start_state_tbody' && (i === 5 || i === 8)) || (tbodyId === 'end_state_tbody' && (i === 4 || i === 7));
+                const rowCls = `table-row transition-colors ${isBottom ? 'table-row-group-bottom' : ''}`;
+                
+                const lblWrap = row.hl 
+                    ? `<span class="bg-yellow-900/40 border-l-2 border-yellow-500 pl-2 pr-1 ml-[-10px] rounded py-0.5 inline-block">${row.label}</span>`
+                    : row.label;
+                
+                const cellValCls = `font-mono font-semibold text-right text-slate-200 border-l border-slate-700/30 ${row.hl ? 'bg-yellow-900/40' : ''}`;
+                const cellTokCls = `font-mono font-medium text-right pr-6 border-l border-slate-700/30 ${row.hl ? 'bg-yellow-900/40 text-slate-300' : 'text-slate-400/80'}`;
+                
+                let valStr = '<span class="opacity-30">-</span>';
+                if (row.val !== null && row.val !== undefined) {
+                    if (row.isPct) {
+                        valStr = row.isApr ? `<span class="text-indigo-400 font-bold tracking-tight">${formatPercent(row.val)}</span>` : formatPercent(row.val);
+                    } else if (typeof row.val === 'number' && !isNaN(row.val)) {
+                        valStr = formatCurrency(row.val);
+                    } else if (typeof row.val === 'string') {
+                        valStr = isNaN(parseFloat(row.val)) ? row.val : formatNumber(parseFloat(row.val));
+                    }
+                }
+                
+                let tokStr = '<span class="opacity-30">-</span>';
+                if (row.tok !== null && row.tok !== undefined && !isNaN(row.tok)) {
+                    let suffix = row.tokSuffix ? ` <span class="text-xs ml-1 opacity-70">${row.tokSuffix}</span>` : '';
+                    tokStr = formatNumber(row.tok) + suffix;
+                } else if (typeof row.tok === 'string' && row.tok.includes('NA')) {
+                    tokStr = row.tok;
+                }
+                
+                html += `<tr class="${rowCls}">
+                    <td class="table-cell font-medium text-slate-300 pl-6">${lblWrap}</td>
+                    <td class="table-cell ${cellValCls}">${valStr}</td>
+                    <td class="table-cell ${cellTokCls}">${tokStr}</td>
+                </tr>`;
+            });
+            document.getElementById(tbodyId).innerHTML = html;
+        };
+
+        renderTable('start_state_tbody', [
+            { label: `Total <span class="b12-text">${B12}</span> circulating`, val: E9, tok: F9 },
+            { label: `<span class="b12-text">${B12}</span> $ in Furnace`, val: E10, tok: F10, hl: true },
+            { label: `<span class="b8-text">${B8}</span> rewards entering furnace/year`, val: E11, tok: F11 },
+            { label: `<span class="b8-text">${B8}</span> rewards entering furnace/2 weeks`, val: E12, tok: F12 },
+            { label: `<span class="b8-text">${B8}</span> rewards entering furnace/day`, val: E13, tok: F13, hl: true },
+            { label: `Daily burn rate %`, val: E14, isPct: true, tok: null },
+            { label: `% of Furnace <span class="b12-text">${B12}</span> burned annually`, val: E15, isPct: true, tok: null },
+            { label: `Days to fully burn all Furnace <span class="b12-text">${B12}</span>`, val: E16.toString(), tok: F16, tokSuffix: "years" },
+            { label: `Amount of <span class="b12-text">${B12}</span> burned in a year`, val: E17, tok: F17 },
+            { label: `Amount of <span class="b12-text">${B12}</span> not burned in a year`, val: E18, tok: F18 },
+            { label: `Annual burned <span class="b12-text">${B12}</span> value as <span class="b8-text">${B8}</span>`, val: E19, tok: null },
+            { label: `Rebond APR`, val: E20, isPct: true, isApr: true, tok: null }
+        ]);
+
+
+        // [BURN INCENTIVES AND STIMULUS]
+        const J23 = Number(document.getElementById('j23').value) / 100;
+        const J22 = Number(document.getElementById('j22').value);
+        const J10 = Number(document.getElementById('j10').value);
+        
+        const J21 = J10 * J23;
+        const J24 = J21;
+        const J25 = J22;
+        const J26 = J24 + J25;
+        const J27 = E20 > 0 ? (J26 * B25) / E20 : 0;
+        
+        document.getElementById('out_j26').innerText = formatCurrency(J26);
+
+        // [ACTOR STATES]
+        const k12Input = document.getElementById('k12');
+        let K12 = Number(k12Input.value);
+        
+        // Soft-cap Biff in furnace so Doc calculation stays positive (matching E10)
+        if(K12 > E10) {
+            K12 = E10;
+            if (document.activeElement !== k12Input) {
+                k12Input.value = K12.toFixed(0);
+            }
+        }
+        
+        const L12 = E10 - K12;
+        document.getElementById('out_l12').innerText = formatCurrency(L12);
+
+        // Before Native APRs
+        const K15 = K12 > 0 ? K12 * E20 : 0;
+        const L15 = L12 > 0 ? L12 * E20 : 0;
+        const K16 = K12 > 0 ? K15 / K12 : 0;
+        const L16 = L12 > 0 ? L15 / L12 : 0;
+
+        // Post-Deadline Math
+        const R13 = J27 >= K12 ? K12 : J27 - (J27 * 0.05);
+        const S13 = (J27 - R13) * 0.95 > L12 ? L12 : (J27 > K12 ? ((J27 - R13) * 0.95) : 0);
+        const T13 = R13 + S13;
+        const R12 = K12 - R13; // biff furn after
+        const S12 = L12 - S13; // doc furn after
+        const T12 = R12 + S12;
+        
+        const Q11 = (R13 + S13) >= J10 ? (J10 - J24) : ((R13 + S13) < J10 ? (R13 + S13) : 0); // marty furn after
+        const Q10 = (J10 - J24) - Q11;
+
+        const W11 = B10 * B18; // total annual rewards
+
+        // Furnace Shares post deadline
+        const total_furnace_after = Q11 + R12 + S12;
+        const marty_share_af = total_furnace_after > 0 ? Q11 / total_furnace_after : 0;
+        const biff_share_af = total_furnace_after > 0 ? R12 / total_furnace_after : 0;
+        const doc_share_af = total_furnace_after > 0 ? S12 / total_furnace_after : 0;
+
+        // Rewards post deadline
+        const R15 = biff_share_af * W11;
+        const S15 = doc_share_af * W11;
+        const Q15 = W11 - R15 - S15; // Marty rewards
+        
+        // Stimulus Shares
+        const r_s_sum = R13 + S13;
+        const R16 = r_s_sum > 0 ? R13 / r_s_sum : 0;
+        const S16 = r_s_sum > 0 ? S13 / r_s_sum : 0;
+        const R17 = R16 * J26 * B25;
+        const S17 = S16 * J26 * B25;
+        
+        const R18 = R15 + R17;
+        const S18 = S15 + S17;
+
+        // Post APRs
+        const Q20 = Q11 > 0 ? Q15 / Q11 : 0; // Marty regular APR calculation
+        
+        const X10 = B24 > 0 ? Q11 / B24 : 0;
+        const X14 = Number(document.getElementById('w14').value) / 100 * X10; // Explicitly fetching W14 to ensure it picks up DOM state
+        const W20 = X14 * B21;
+        
+        const reusdperday_e13 = E11 / 365;
+        const bcvxcrvperdayval_w19 = X14 * B24;
+        const Q20_sheet = bcvxcrvperdayval_w19 > 0 ? (reusdperday_e13 / bcvxcrvperdayval_w19) - 1 : 0; 
+        
+        const W13 = reusdperday_e13;
+
+        // Dom writes Actor Panel
+        // Biff
+        document.getElementById('biff_bf_furn').innerText = formatCurrency(K12);
+        document.getElementById('furnace_total_note').innerText = formatCurrency(E10);
+        document.getElementById('biff_bf_share').innerText = formatPercent(E10 > 0 ? K12 / E10 : 0);
+        document.getElementById('biff_bf_apr').innerText = formatPercent(K16);
+        document.getElementById('biff_af_furn').innerText = formatCurrency(R12);
+        document.getElementById('biff_af_share').innerText = formatPercent(biff_share_af);
+        document.getElementById('biff_stim_share').innerText = formatPercent(R16);
+        document.getElementById('biff_af_apr').innerText = formatPercent(K12 > 0 ? R18 / K12 : 0);
+        
+        // Doc
+        document.getElementById('doc_bf_furn').innerText = formatCurrency(L12);
+        document.getElementById('doc_bf_share').innerText = formatPercent(E10 > 0 ? L12 / E10 : 0);
+        document.getElementById('doc_bf_apr').innerText = formatPercent(L16);
+        document.getElementById('doc_af_furn').innerText = formatCurrency(S12);
+        document.getElementById('doc_af_share').innerText = formatPercent(doc_share_af);
+        document.getElementById('doc_stim_share').innerText = formatPercent(S16);
+        document.getElementById('doc_af_apr').innerText = formatPercent(L12 > 0 ? S18 / L12 : 0);
+
+        // Marty
+        document.getElementById('marty_bf_out').innerText = formatCurrency(J10);
+        document.getElementById('marty_bf_share').innerText = "0.00%";
+        document.getElementById('marty_bf_apr').innerText = "0.00%";
+        document.getElementById('marty_af_furn').innerText = formatCurrency(Q11);
+        document.getElementById('marty_af_share').innerText = formatPercent(marty_share_af);
+        document.getElementById('marty_stim_share').innerText = "0.00%";
+        document.getElementById('marty_af_apr').innerText = formatPercent(Q20_sheet);
+
+
+        // [4. ENDING SYSTEM STATE MATH]
+        const W15 = W14 * 365;
+        document.getElementById('out_w15').innerText = formatPercent(W15);
+        
+        const X9 = F9;
+        const W9 = X9 * B15;
+        const W10 = Q11 + R12 + S12;
+        const X11 = W11 / B9;
+        const W12 = W11 / B25;
+        const X12 = W12 / B9;
+        const X13 = W13 / B9;
+        const W16 = W14 > 0 ? 1 / W14 : 0;
+        const X16 = W16 / 365;
+        const W17 = X10 * W15;
+        const X17 = X16 > 0 ? X10 * (1 / X16) : 0;
+        const X18 = X10 - X17;
+        const W18 = X18 > 0 ? X18 : "NA";
+
+        renderTable('end_state_tbody', [
+            { label: `Total <span class="b12-text">${B12}</span> circulating`, val: W9, tok: X9 },
+            { label: `<span class="b12-text">${B12}</span>+<span class="b22-text">${B22}</span> in Furnace`, val: W10, tok: X10, tokSuffix: B22, hl: true },
+            { label: `<span class="b8-text">${B8}</span> entering furnace per year`, val: W11, tok: X11, tokSuffix: B8 },
+            { label: `<span class="b8-text">${B8}</span> entering furnace per 2 weeks`, val: W12, tok: X12 },
+            { label: `<span class="b8-text">${B8}</span> entering furnace per day`, val: W13, tok: X13, hl: true },
+            { label: `Days to fully burn all Furnace <span class="b12-text">${B12}</span>/<span class="b22-text">${B22}</span>`, val: W16.toString(), tok: X16, tokSuffix: "years" },
+            { label: `Amount of <span class="b12-text">${B12}</span>/<span class="b22-text">${B22}</span> burned in a year`, val: W17, tok: X17, tokSuffix: B22 },
+            { label: `Amount of <span class="b12-text">${B12}</span>/<span class="b22-text">${B22}</span> not burned in a year`, val: W18, tok: X18 },
+            { label: `<span class="bg-yellow-900/40 border-l-2 border-yellow-500 pl-2 pr-1 ml-[-10px] rounded"><span class="b22-text">${B22}</span> burned per Day</span>`, val: bcvxcrvperdayval_w19, tok: X14, tokSuffix: B22, hl: true }
+        ]);
+    }
+
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+    
+    document.getElementById('k12').addEventListener('blur', () => {
+        calculate(); // Recalculate on blur to enforce hard-snapping if they type oversized numbers
+    });
+
+    // Custom Tooltip Logic
+    const initTooltip = (containerId, tooltipId) => {
+        const container = document.getElementById(containerId);
+        const tooltip = document.getElementById(tooltipId);
+        
+        container.addEventListener('mouseenter', () => {
+            tooltip.classList.remove('invisible', 'opacity-0');
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            tooltip.classList.add('invisible', 'opacity-0');
+        });
+    };
+    
+    initTooltip('tooltip-container-1', 'custom-tooltip-1');
+    initTooltip('tooltip-container-2', 'custom-tooltip-2');
+
+    // Fetch live prices asynchronously
+    async function fetchLivePrices() {
+        try {
+            // Fetch reUSD Price
+            const reusdResponse = await fetch('https://prices.curve.finance/v1/usd_price/ethereum/0x57aB1E0003F623289CD798B1824Be09a793e4Bec');
+            if (reusdResponse.ok) {
+                const reusdData = await reusdResponse.json();
+                const price = reusdData.data.usd_price;
+                const b9Input = document.getElementById('b9');
+                // Only overwrite if it's currently at the hardcoded default
+                if (b9Input.value === "1.00") {
+                    b9Input.value = price.toFixed(4);
+                    calculate(); // Update dependencies
+                }
+                document.getElementById('reusd_price_api').innerText = `(Current Price: $${price.toFixed(4)})`;
+            } else {
+                document.getElementById('reusd_price_api').innerText = `(API Unavailable)`;
+            }
+
+            // Fetch cvxCRV Price
+            const cvxcrvResponse = await fetch('https://prices.curve.finance/v1/usd_price/ethereum/0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7');
+            if (cvxcrvResponse.ok) {
+                const cvxcrvData = await cvxcrvResponse.json();
+                const price = cvxcrvData.data.usd_price;
+                const b21Input = document.getElementById('b21');
+                // Only overwrite if it's currently at the hardcoded default
+                if (b21Input.value === "0.16") {
+                    b21Input.value = price.toFixed(4);
+                    calculate(); // Update dependencies
+                }
+                document.getElementById('burn_asset_price_api').innerText = `(Current Price: $${price.toFixed(4)})`;
+            } else {
+                document.getElementById('burn_asset_price_api').innerText = `(API Unavailable)`;
+            }
+
+        } catch (error) {
+            console.error("Failed to fetch live prices:", error);
+            document.getElementById('reusd_price_api').innerText = `(Live sync failed)`;
+            document.getElementById('burn_asset_price_api').innerText = `(Live sync failed)`;
+        }
+    }
+
+    // Run on startup
+    calculate();
+    fetchLivePrices();
+
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+
+</script>
+</body>
+</html>
