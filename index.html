@@ -600,34 +600,11 @@
                 const isBottom = (tbodyId === 'start_state_tbody' && (i === 5 || i === 8)) || (tbodyId === 'end_state_tbody' && (i === 4 || i === 7));
                 const rowCls = `table-row transition-colors ${isBottom ? 'table-row-group-bottom' : ''}`;
                 
-                const lblWrap = row.hl 
-                    ? `<span class="bg-yellow-900/40 border-l-2 border-yellow-500 pl-2 rounded py-0.5 inline-block w-full h-full" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">${row.label}</span>`
-                    : row.label;
-                
-                const cellValCls = `font-mono font-semibold text-right text-slate-200 border-l border-slate-700/30 ${row.hl ? 'bg-yellow-900/40' : ''}`;
-                const cellTokCls = `font-mono font-medium text-right pr-6 border-l border-slate-700/30 ${row.hl ? 'bg-yellow-900/40 text-slate-300' : 'text-slate-400/80'}`;
-                
-                let valStr = '<span class="opacity-30">-</span>';
-                if (row.val !== null && row.val !== undefined) {
-                    if (row.isPct) {
-                        valStr = row.isApr ? `<span class="text-indigo-400 font-bold tracking-tight">${formatPercent(row.val)}</span>` : formatPercent(row.val);
-                    } else if (typeof row.val === 'number' && !isNaN(row.val)) {
-                        valStr = formatCurrency(row.val);
-                    } else if (typeof row.val === 'string') {
-                        valStr = isNaN(parseFloat(row.val)) ? row.val : formatNumber(parseFloat(row.val));
-                    }
-                }
-                
-                let tokStr = '<span class="opacity-30">-</span>';
-                if (row.tok !== null && row.tok !== undefined && !isNaN(row.tok)) {
-                    let suffix = row.tokSuffix ? ` <span class="text-xs ml-1 opacity-70">${row.tokSuffix}</span>` : '';
-                    tokStr = formatNumber(row.tok) + suffix;
-                } else if (typeof row.tok === 'string' && row.tok.includes('NA')) {
-                    tokStr = row.tok;
-                }
+                const cellValCls = `font-mono font-semibold text-right text-slate-200 ${row.hl ? 'bg-yellow-900/40' : ''}`;
+                const cellTokCls = `font-mono font-medium text-right pr-6 ${row.hl ? 'bg-yellow-900/40 text-slate-300' : 'text-slate-400/80'}`;
                 
                 html += `<tr class="${rowCls}">
-                    <td class="table-cell font-medium text-slate-300 pl-6">${lblWrap}</td>
+                    <td class="table-cell ${row.hl ? 'bg-yellow-900/40 border-l-2 border-yellow-500' : ''} text-slate-300 font-semibold pl-6">${row.label}</td>
                     <td class="table-cell ${cellValCls}">${valStr}</td>
                     <td class="table-cell ${cellTokCls}">${tokStr}</td>
                 </tr>`;
