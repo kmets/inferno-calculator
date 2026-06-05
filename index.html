@@ -694,11 +694,12 @@
 
         const W11 = B10 * B18; // total annual rewards
 
-        // Furnace Shares post deadline
+        // Furnace Shares post deadline (for yield allocation based on fireUSD furnace)
+        const fireusd_total = R12 + S12 + R13 + S13; // = E10, the fireUSD pool
         const total_furnace_after = Q11 + R12 + S12;
         const marty_share_af = total_furnace_after > 0 ? Q11 / total_furnace_after : 0;
-        const biff_share_af = total_furnace_after > 0 ? R12 / total_furnace_after : 0;
-        const doc_share_af = total_furnace_after > 0 ? S12 / total_furnace_after : 0;
+        const biff_share_af = fireusd_total > 0 ? R12 / fireusd_total : 0;
+        const doc_share_af = fireusd_total > 0 ? S12 / fireusd_total : 0;
 
         // Rewards post deadline
         const R15 = biff_share_af * W11;
