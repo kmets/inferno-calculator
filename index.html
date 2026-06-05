@@ -367,6 +367,9 @@
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">$</span>
                                     <input type="number" id="j22" value="5000" step="10" class="w-full p-3 pl-8 border border-slate-700 rounded-lg bg-slate-950/50 text-white text-right font-mono text-sm focus:outline-none focus:border-cyan-500">
                                 </div>
+                                <p class="text-[9px] text-slate-500 mt-1.5 leading-tight text-center italic">
+                                    Stimulus should offer a yield greater than<br>Rebond APR of <span id="rebond_apr_display" class="text-indigo-400 font-semibold not-italic">2.65%</span>
+                                </p>
                             </div>
                         </div>
                         <div class="bg-slate-950 px-6 py-4 rounded-xl shadow-inner border border-slate-800 flex flex-col justify-center text-center w-full sm:w-auto">
@@ -733,6 +736,7 @@
         // Biff
         document.getElementById('biff_bf_furn').innerText = formatCurrency(K12);
         document.getElementById('furnace_total_note').innerText = formatCurrency(E10);
+        document.getElementById('rebond_apr_display').innerText = formatPercent(E20);
         document.getElementById('biff_bf_share').innerText = formatPercent(E10 > 0 ? K12 / E10 : 0);
         document.getElementById('biff_bf_apr').innerText = formatPercent(K16);
         document.getElementById('biff_af_furn').innerText = formatCurrency(R12);
