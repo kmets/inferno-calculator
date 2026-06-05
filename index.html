@@ -362,14 +362,19 @@
                                 </div>
                             </div>
                             <div class="w-full sm:w-48">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Stimulus per epoch</label>
+                                <div class="relative" id="tooltip-container-3">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center cursor-help">
+                                        Stimulus per epoch
+                                        <sup class="text-cyan-400 ml-0.5">(?)</sup>
+                                    </label>
+                                    <div class="absolute z-50 invisible opacity-0 transition-opacity duration-200 bg-slate-800 text-white text-xs rounded p-2 shadow-lg -top-12 left-1/2 -translate-x-1/2 w-56 pointer-events-none text-center" id="custom-tooltip-3">
+                                        Stimulus should offer a yield greater than Rebond APR of <span id="rebond_apr_display" class="text-indigo-400 font-semibold">2.65%</span>
+                                    </div>
+                                </div>
                                 <div class="relative">
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">$</span>
                                     <input type="number" id="j22" value="5000" step="10" class="w-full p-3 pl-8 border border-slate-700 rounded-lg bg-slate-950/50 text-white text-right font-mono text-sm focus:outline-none focus:border-cyan-500">
                                 </div>
-                                <p class="text-[9px] text-slate-500 mt-1.5 leading-tight text-center italic">
-                                    Stimulus should offer a yield greater than<br>Rebond APR of <span id="rebond_apr_display" class="text-indigo-400 font-semibold not-italic">2.65%</span>
-                                </p>
                             </div>
                         </div>
                         <div class="bg-slate-950 px-6 py-4 rounded-xl shadow-inner border border-slate-800 flex flex-col justify-center text-center w-full sm:w-auto">
@@ -818,6 +823,7 @@
     
     initTooltip('tooltip-container-1', 'custom-tooltip-1');
     initTooltip('tooltip-container-2', 'custom-tooltip-2');
+    initTooltip('tooltip-container-3', 'custom-tooltip-3');
 
     // Fetch live prices asynchronously
     async function fetchLivePrices() {
